@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PruebaTecnica.API/PruebaTecnica.API.csproj" />
+    <Project Path="src/PruebaTecnica.BL/PruebaTecnica.BL.csproj" />
+    <Project Path="src/PruebaTecnica.DAL/PruebaTecnica.DAL.csproj" />
+  </Folder>
+</Solution>
