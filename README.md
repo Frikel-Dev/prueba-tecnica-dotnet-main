@@ -46,7 +46,7 @@ El repo trae un entorno Docker base. Solo necesitas [Docker](https://docs.docker
 | Servicio | Contenido | Puerto en tu máquina |
 | --- | --- | --- |
 | `db` | SQL Server 2022 (Developer) | `1433` |
-| `dev` | SDK de .NET 10, con el repo montado en `/workspace` | `8080` → `8080` del contenedor |
+| `dev` | SDK de .NET 10, repo montado y API iniciada con `dotnet watch` | `8080` → `8080` del contenedor |
 
 Conexión a SQL Server:
 
@@ -56,18 +56,39 @@ Conexión a SQL Server:
 | Tu máquina | `localhost,1433` | `sa` | `Dev_Passw0rd_2026` |
 
 ```bash
-docker compose up -d          # levanta el entorno
+docker compose up -d           # levanta SQL Server y la API
 docker compose exec dev bash  # abre una terminal con .NET 10
 docker compose down           # lo detiene
 docker compose down -v        # lo detiene y borra los datos de SQL Server
 ```
 
+- Interfaz OpenAPI: <http://localhost:8080/scalar/v1>
+- Documento OpenAPI: <http://localhost:8080/openapi/v1.json>
+- Endpoint de ejemplo: <http://localhost:8080/weatherforecast>
 - `sqlcmd` está disponible en el contenedor `db`: `docker compose exec db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Dev_Passw0rd_2026 -C`
 - Con VS Code puedes abrir el repo dentro del contenedor `dev` desde `.devcontainer/` ("Reopen in Container").
 - Si un puerto está ocupado o quieres otra contraseña, copia `.env.example` a `.env` y cámbialo.
 - En Mac con Apple Silicon, SQL Server corre emulado (`linux/amd64`) con Docker Desktop (Rosetta activado) u OrbStack.
 
 Puedes modificar el entorno, reemplazarlo o no usarlo.
+
+### Entity Framework Core
+
+La capa DAL usa `Microsoft.EntityFrameworkCore.SqlServer` 10.0.12. Este proveedor funciona tanto con SQL Server como con Azure SQL; en Azure solo cambia la cadena de conexión `ConnectionStrings__DefaultConnection`.
+
+En Docker, la API se conecta al servicio `db` y aplica las migraciones al iniciar en `Development`. La cadena local usa `TrustServerCertificate=True` únicamente para el SQL Server de desarrollo. Para Azure SQL usa una cadena segura con `Encrypt=True` y `TrustServerCertificate=False`, configurada como variable de entorno o secreto; no la guardes en el repositorio.
+
+El manifiesto local fija `dotnet-ef` a la misma versión. Para crear una migración desde la raíz:
+
+```bash
+dotnet tool restore
+dotnet ef migrations add NombreMigracion \
+  --project src/PruebaTecnica.DAL/PruebaTecnica.DAL.csproj \
+  --startup-project src/PruebaTecnica.API/PruebaTecnica.API.csproj \
+  --output-dir Migrations
+```
+
+En entornos distintos de `Development`, aplica los cambios de esquema de forma explícita con `dotnet ef database update`, usando una cadena de conexión Azure SQL en `ConnectionStrings__DefaultConnection`. La API no ejecuta migraciones automáticamente en esos entornos.
 
 ## Lo que debes construir
 
@@ -117,7 +138,7 @@ Los errores deben responder con códigos HTTP adecuados (`400`, `404`, `409`, et
 
 ### 4. Cómo correrlo
 
-El proyecto debe levantar con instrucciones claras en tu README. Lo ideal es que un solo `docker compose up` levante SQL Server y la API, aplique el esquema y cargue el seed. Puedes extender el `compose.yaml` incluido. Si no usas Docker, documenta los pasos exactos.
+El proyecto debe levantar con instrucciones claras en tu README. En el entorno actual, un solo `docker compose up` levanta SQL Server y la API, y la API aplica las migraciones de EF Core en `Development`. El mecanismo de seed todavía está pendiente. Puedes extender el `compose.yaml` incluido. Si no usas Docker, documenta los pasos exactos.
 
 El entorno usa SQL Server 2022. También puedes usar la imagen `mcr.microsoft.com/mssql/server:2025-latest`.
 

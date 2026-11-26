@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup Condition="'$(OS)' == 'Unix'">
+    <!-- Keep Linux container outputs separate from Windows-generated files in the bind mount. -->
+    <BaseIntermediateOutputPath>/tmp/prueba-tecnica-dotnet/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+    <BaseOutputPath>/tmp/prueba-tecnica-dotnet/$(MSBuildProjectName)/bin/</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/obj/**;**/bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

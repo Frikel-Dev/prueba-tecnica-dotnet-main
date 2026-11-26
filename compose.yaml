@@ -22,8 +22,17 @@ services:
   dev:
     image: mcr.microsoft.com/dotnet/sdk:10.0
     working_dir: /workspace
-    command: sleep infinity
+    command:
+      - dotnet
+      - watch
+      - run
+      - --no-launch-profile
+      - --project
+      - src/PruebaTecnica.API/PruebaTecnica.API.csproj
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=PruebaTecnica;User Id=sa;Password=${DB_PASSWORD:-Dev_Passw0rd_2026};Encrypt=True;TrustServerCertificate=True"
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
