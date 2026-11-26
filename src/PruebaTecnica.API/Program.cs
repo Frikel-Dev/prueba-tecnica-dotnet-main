@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using PruebaTecnica.DAL;
+using PruebaTecnica.DAL.Data;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,17 +8,25 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddDataAccess(builder.Configuration);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    await using var scope = app.Services.CreateAsyncScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<PropertyManagementDbContext>();
+    await dbContext.Database.MigrateAsync();
+
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 var summaries = new[]
 {
